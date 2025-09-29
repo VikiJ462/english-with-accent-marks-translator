@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Translator with Accent Marks</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin-bottom: 10px;
+            padding: 10px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #output {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            font-size: 18px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>English Translator with Accent Marks</h1>
+        <p>This tool adds accent marks to English text based on simple pronunciation rules:</p>
+        <ul>
+            <li>BREVE (˘) - Silent letters</li>
+            <li>OVERDOT (˙) - Schwa</li>
+            <li>MACRON (¯) - Long vowel</li>
+            <li>MACRON BELOW (̱) - Emphasis (stress)</li>
+            <li>GRAVE (`) - Homographs (e.g., to distinguish meanings)</li>
+            <li>DIAERESIS (¨) - Vowel change (separate pronunciation)</li>
+        </ul>
+        <p>Note: This is a basic implementation with pattern-based rules. It may not cover all cases accurately due to English's irregularities.</p>
+        <textarea id="input" placeholder="Enter English text here..."></textarea>
+        <button onclick="translateText()">Translate</button>
+        <div id="output"></div>
+    </div>
+
+    <script>
+        function addMarks(word) {
+            if (word.length === 0) return word;
+            
+            let chars = word.split('');
+            const vowels = 'aeiouAEIOU';
+
+            // Silent letters patterns
+            if (word.toLowerCase().startsWith('kn')) {
+                chars[0] = chars[0] + '\u02D8'; // breve on k
+            }
+            if (word.toLowerCase().startsWith('gn')) {
+                chars[0] = chars[0] + '\u02D8'; // breve on g
+            }
+            if (word.toLowerCase().endsWith('mb')) {
+                chars[chars.length - 1] = chars[chars.length - 1] + '\u02D8'; // breve on b
+            }
+            if (word.toLowerCase().includes('gh')) {
+                const pos = word.toLowerCase().indexOf('gh');
+                chars[pos + 1] = chars[pos + 1] + '\u02D8'; // breve on h
+            }
+
+            // Silent e at end for long vowel
+            if (word.toLowerCase().endsWith('e') && word.length > 2) {
+                let vowelFound = false;
+                for (let i = chars.length - 2; i >= 0; i--) {
+                    if (vowels.includes(chars[i].toLowerCase())) {
+                        chars[i] = chars[i] + '\u0304'; // macron on vowel
+                        vowelFound = true;
+                        break;
+                    }
+                }
+                if (vowelFound) {
+                    chars[chars.length - 1] = chars[chars.length - 1] + '\u02D8'; // breve on e
+                }
+            }
+
+            // Schwa simple patterns, e.g., -er ending
+            if (word.toLowerCase().endsWith('er') && word.length > 2) {
+                chars[chars.length - 2] = chars[chars.length - 2] + '\u0307'; // overdot on e
+            }
+            // Schwa for initial 'a' in some words like 'about'
+            if (word.toLowerCase().startsWith('a') && ['about', 'ago', 'alike'].includes(word.toLowerCase())) {
+                chars[0] = chars[0] + '\u0307'; // overdot on a
+            }
+
+            // Emphasis (stress): simple - on first vowel
+            let stressAdded = false;
+            for (let i = 0; i < chars.length; i++) {
+                if (vowels.includes(chars[i].toLowerCase()) && !stressAdded) {
+                    chars[i] = chars[i] + '\u0331'; // macron below
+                    stressAdded = true;
+                }
+            }
+
+            // Grave for homographs: simple examples
+            const homographs = {
+                'read': 'rèad', // assuming past tense with grave on e
+                'lead': 'lèad'  // one version
+            };
+            if (homographs[word.toLowerCase()]) {
+                return homographs[word.toLowerCase()]; // replace fully for simplicity
+            }
+
+            // Diaeresis for specific words
+            const diaeresisWords = ['naive', 'cooperate', 'reenter'];
+            if (diaeresisWords.includes(word.toLowerCase())) {
+                // For naive: naï ve -> but add to i
+                if (word.toLowerCase() === 'naive') {
+                    chars[2] = chars[2] + '\u0308';
+                }
+                // For cooperate: coöperate
+                if (word.toLowerCase() === 'cooperate') {
+                    chars[2] = chars[2] + '\u0308'; // coö
+                }
+                // Similar for others
+            }
+
+            return chars.join('');
+        }
+
+        function translateText() {
+            const input = document.getElementById('input').value;
+            const words = input.split(/\s+/);
+            const translatedWords = words.map(addMarks);
+            const output = translatedWords.join(' ');
+            document.getElementById('output').textContent = output;
+        }
+    </script>
+</body>
+</html>
